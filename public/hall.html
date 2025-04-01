@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理系统</title>
+    <style>
+        /* 设置页面内容垂直水平居中并去除默认边距 */
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+            font-family: Arial, sans-serif;
+            background-color: #bcd4bc;
+        }
+
+        /* 页面主容器 */
+        .main-container {
+            width: 100%;
+            max-width: 800px; /* 最大宽度 */
+            padding: 20px;
+            box-sizing: border-box; /* 确保内边距不影响总宽度 */
+            text-align: center;
+            position: relative; /* 使右上角的内容定位相对于主容器 */
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px; /* 标题与按钮之间的间距 */
+        }
+
+        /* 按钮容器 */
+        .button-container {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column; /* 垂直排列按钮 */
+            align-items: center;
+        }
+
+        /* 按钮样式 */
+        button {
+            background: linear-gradient(145deg, #4CAF50, #388E3C); /* 渐变背景 */
+            color: white; /* 按钮文字颜色 */
+            border: 2px solid #388E3C; /* 强化的边框 */
+            padding: 15px 32px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0; /* 按钮之间的间距 */
+            border-radius: 30px; /* 按钮圆角 */
+            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.3); /* 按钮阴影 */
+            transition: all 0.3s ease; /* 按钮的过渡效果 */
+            font-family: 'Poppins', sans-serif; /* 使用圆润感的字体 */
+            letter-spacing: 1px; /* 字母间距 */
+        }
+
+        /* 鼠标悬停时的按钮效果 */
+        button:hover {
+            background: linear-gradient(145deg, #388E3C, #4CAF50); /* 悬停时背景反转 */
+            box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.4); /* 悬停时的阴影效果 */
+        }
+
+        /* 按钮点击效果 */
+        button:active {
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px rgba(255, 255, 255, 0.4); /* 按钮点击时的内阴影 */
+            transform: translateY(2px); /* 点击时按钮下移 */
+        }
+
+        /* 右上角显示用户名 */
+        .user-info {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+       /* 响应式设计 */
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 10px; /* 小屏幕下减少内边距 */
+        }
+
+        button {
+            padding: 20px 40px; /* 小屏幕下按钮尺寸增大 */
+            font-size: 16px; /* 可选：增大按钮字体 */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* 添加平滑的过渡效果 */
+        }
+
+        button:active {
+        transform: scale(1.4); /* 按下按钮时增大按钮 */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* 按下时添加阴影效果 */
+        }
+
+    .user-info {
+        font-size: 14px; /* 小屏幕下缩小用户名显示 */
+    }
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 右上角显示用户名 -->
+        <div class="user-info" id="userInfo">Hello, 用户</div>
+
+        <h1>图书管理大厅</h1>
+        <div class="button-container">
+            <!-- 按钮，点击后跳转到不同的页面 -->
+            <button onclick="window.location.href='/view.html'">查看图书信息</button>
+            <button onclick="window.location.href='/addbook.html'">编写入新图书</button>
+            <button onclick="window.location.href='/jiehuan.html'">借阅/归还图书</button>
+        </div>
+    </div>
+
+    <script>
+        // 从 localStorage 中获取登录的用户名
+        document.addEventListener("DOMContentLoaded", () => {
+            const loggedInUser = localStorage.getItem("loggedInUser");
+            const userInfoDiv = document.getElementById("userInfo");
+            if (loggedInUser) {
+                userInfoDiv.textContent = `Hello, ${loggedInUser}`;
+            } else {
+                userInfoDiv.textContent = "Hello, Guest";
+            }
+        });
+    </script>
+</body>
+</html>
+

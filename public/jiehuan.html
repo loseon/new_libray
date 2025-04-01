@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>书籍借阅系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #35c259;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #bookList {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .book-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 300px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .book-item h3 {
+            margin-top: 0;
+        }
+        .more-info {
+            display: none;
+            margin-top: 10px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .more-details {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .more-details:hover {
+            background-color: #0056b3;
+        }
+        .borrow-button, .return-button {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .borrow-button:hover {
+            background-color: #218838;
+        }
+        .return-button {
+            background-color: #dc3545;
+        }
+        .return-button:hover {
+            background-color: #c82333;
+        }
+        .delete-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #ffc107;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .delete-button:hover {
+            background-color: #e0a800;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>书籍借阅系统</h1>
+    <div id="bookList"></div>
+
+    <script>
+        // 模拟获取书籍列表的函数
+        function getBooks() {
+            fetch('http://localhost:3000/api/books')  // 假设 API 是这个路径
+                .then(response => response.json())
+                .then(data => displayBooks(data))
+                .catch(error => console.error('获取书籍失败:', error));
+        }
+
+        // 渲染书籍列表
+        function displayBooks(books) {
+            const bookListContainer = document.getElementById('bookList');
+            bookListContainer.innerHTML = '';  // 清空书籍列表
+
+            books.forEach(book => {
+                const bookItem = document.createElement('div');
+                bookItem.classList.add('book-item');
+                bookItem.setAttribute('data-id', book.id);
+
+                // 根据书籍的借阅状态添加按钮
+                let borrowButton = '';
+                if (book.is_borrowed) {
+                    borrowButton = `<button class="return-button" onclick="returnBook(event)">归还</button>`;
+                } else {
+                    borrowButton = `<button class="borrow-button" onclick="borrowBook(event)">借阅</button>`;
+                }
+
+                bookItem.innerHTML = `
+                    <h3>${book.title}</h3>
+                    <p><strong>作者：</strong>${book.author}</p>
+                    ${borrowButton}
+                `;
+
+                bookListContainer.appendChild(bookItem);
+            });
+        }
+
+
+        // 借阅书籍
+        function borrowBook(event) {
+            const bookItem = event.target.closest('.book-item');
+            const bookId = bookItem.getAttribute('data-id');
+            const borrower = prompt("请输入借阅者的姓名");
+
+            if (!borrower) {
+                alert('借阅者姓名不能为空');
+                return;
+            }
+
+            fetch(`http://localhost:3000/api/books/${bookId}/borrow`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ borrower }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('借阅失败');
+                }
+                alert('书籍借阅成功');
+                getBooks();  // 重新加载书籍列表
+            })
+            .catch(error => {
+                console.error('借阅失败:', error);
+                alert('借阅失败，请重试');
+            });
+        }
+
+        // 归还书籍
+        function returnBook(event) {
+            const bookItem = event.target.closest('.book-item');
+            const bookId = bookItem.getAttribute('data-id');
+
+            fetch(`http://localhost:3000/api/books/${bookId}/return`, {
+                method: 'POST',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('归还失败');
+                }
+                alert('书籍已归还');
+                getBooks();  // 重新加载书籍列表
+            })
+            .catch(error => {
+                console.error('归还失败:', error);
+                alert('归还失败，请重试');
+            });
+        }
+
+        // 页面加载时获取书籍列表
+        window.onload = getBooks;
+    </script>
+</body>
+</html>

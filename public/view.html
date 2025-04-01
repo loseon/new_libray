@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书信息</title>
+    <style>
+        body {
+            background-color: #f4f7f6;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .container {
+            margin: 20px auto;
+            padding: 0 20px;
+            max-width: 1200px;
+        }
+
+        .book-list {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        .book-item {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: left;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 500px; /* Adjust height to fit image */
+        }
+
+        .book-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-item h3 {
+            margin: 10px 0;
+            color: #444;
+            font-size: 1.3rem;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .book-item p {
+            margin: 8px 0;
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .book-item img {
+            width: 100%;
+            height: 200px; 
+            object-fit: cover; 
+            border-radius: 8px;
+            margin-bottom: 15px;
+}
+
+        .more-details, .delete-button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .more-details {
+            background: linear-gradient(145deg, #007BFF, #0056b3);
+        }
+
+        .more-details:hover {
+            background: linear-gradient(145deg, #0056b3, #003d80);
+            transform: scale(1.05);
+        }
+
+        .delete-button {
+            background: linear-gradient(145deg, #FF3B30, #e60000);
+        }
+
+        .delete-button:hover {
+            background: linear-gradient(145deg, #e60000, #cc0000);
+        }
+
+        .more-info {
+            display: none;
+            margin-top: 10px;
+            text-align: left;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .book-list {
+                gap: 15px;
+            }
+
+            .book-item {
+                height: 300px; 
+            }
+
+            .more-details, .delete-button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>图书信息</header>
+    <div class="container">
+        <div class="book-list" id="bookList"></div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            fetch('http://localhost:3000/api/books')
+                .then(response => response.json())
+                .then(data => {
+                    displayBooks(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching books:', error);
+                    document.getElementById('bookList').innerHTML = '加载失败，请重试！';
+                });
+        };
+
+        function displayBooks(books) {
+            const bookListContainer = document.getElementById('bookList');
+            bookListContainer.innerHTML = '';
+
+            books.forEach(book => {
+                const bookItem = document.createElement('div');
+                bookItem.classList.add('book-item');
+                bookItem.setAttribute('data-id', book.id);
+
+                // 使用默认图片链接
+                const imageHTML = book.image ? `<img src="${book.image}" alt="${book.title}">` : `<img src="default.jpg" alt="默认图片">`;
+
+                bookItem.innerHTML = `
+                    ${imageHTML}
+                    <h3>${escapeHtml(book.title)}</h3>
+                    <p><strong>作者：</strong>${escapeHtml(book.author)}</p>
+                    <button class="more-details" onclick="toggleDetails(event)">更多详情</button>
+                    <div class="more-info">
+                        <p><strong>ISBN：</strong>${escapeHtml(book.isbn)}</p>
+                        <p><strong>所有者：</strong>${escapeHtml(book.owner)}</p>
+                        <p><strong>描述：</strong>${escapeHtml(book.description || '暂无描述')}</p>
+                    </div>
+                    <button class="delete-button" onclick="deleteBook(event)">删除</button>
+                `;
+                bookListContainer.appendChild(bookItem);
+            });
+        }
+
+        function escapeHtml(text) {
+            const element = document.createElement('div');
+            if (text) {
+                element.innerText = text;
+                return element.innerHTML;
+            }
+            return '';
+        }
+
+        function toggleDetails(event) {
+            const bookItem = event.target.closest('.book-item');
+            const moreInfo = bookItem.querySelector('.more-info');
+            moreInfo.style.display = (moreInfo.style.display === 'block') ? 'none' : 'block';
+            event.target.textContent = moreInfo.style.display === 'block' ? '收起详情' : '更多详情';
+        }
+
+        function deleteBook(event) {
+            const bookItem = event.target.closest('.book-item');
+            const bookId = bookItem.getAttribute('data-id');
+
+            fetch(`http://localhost:3000/api/books/${bookId}`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('删除失败');
+                }
+                bookItem.remove();
+            })
+            .catch(error => {
+                console.error('删除失败:', error);
+                alert('删除失败，请重试');
+            });
+        }
+    </script>
+</body>
+</html>
+
+

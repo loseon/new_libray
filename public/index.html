@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理系统</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4CAF50, #81C784); /* 绿色渐变背景 */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            transition: background 1s ease-in-out;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 350px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        /* 让容器内容渐变出现 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1, h2 {
+            color: #388E3C; /* 深绿色 */
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input {
+            margin: 12px 0;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #66BB6A;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 16px;
+            background-color: #388E3C;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #66BB6A;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            background-color: #4CAF50;
+        }
+
+        p#message {
+            color: #FF5252; /* 红色错误消息 */
+            font-size: 14px;
+        }
+
+        #dynamicText {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #388E3C;
+            animation: colorChange 1s infinite alternate;
+        }
+
+        /* 动态变化的颜色效果 */
+        @keyframes colorChange {
+            0% {
+                color: #66BB6A;
+            }
+            25% {
+                color: #388E3C;
+            }
+            50% {
+                color: #4CAF50;
+            }
+            75% {
+                color: #81C784;
+            }
+            100% {
+                color: #2C6B31;
+            }
+        }
+        /* 动态效果的辅助 */
+        .loading {
+            display: none;
+            color: #388E3C;
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        /* 弹性布局 */
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .btn-container button {
+            width: 45%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>图书管理系统</h1>
+        <div id="loginForm">
+            <h2>用户登录</h2>
+            <form id="login" onsubmit="return handleLogin(event)">
+                <label for="username">用户名:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">密码:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit">登录</button>
+            </form>
+            <p id="message"></p>
+            <p id="dynamicText">诸葛，温岭之光</p>
+        </div>
+        <div id="registerForm" style="display: none;">
+            <h2>用户注册</h2>
+            <form id="register" onsubmit="return handleRegister(event)">
+                <label for="newUsername">用户名:</label>
+                <input type="text" id="newUsername" name="newUsername" required>
+                <label for="newPassword">密码:</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+                <button type="submit">注册</button>
+            </form>
+            <p id="loadingMessage" class="loading">正在注册，请稍等...</p>
+        </div>
+        <div class="btn-container">
+            <button onclick="toggleForm('loginForm')" style="background-color: #66BB6A;">返回登录</button>
+            <button onclick="toggleForm('registerForm')" style="background-color: #66BB6A;">切换注册</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch(`${API_URL}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                localStorage.setItem("loggedInUser", username);
+                window.location.href = "/dashboard";
+            } else {
+                document.getElementById("message").innerText = result.message || "登录失败";
+                document.getElementById("registerForm").style.display = "block";
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const newUsername = document.getElementById("newUsername").value;
+            const newPassword = document.getElementById("newPassword").value;
+
+            document.getElementById("loadingMessage").style.display = "block"; // 显示加载信息
+
+            const response = await fetch(`${API_URL}/register`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username: newUsername, password: newPassword })
+            });
+
+            const result = await response.json();
+            document.getElementById("loadingMessage").style.display = "none"; // 隐藏加载信息
+
+            if (result.success) {
+                alert("注册成功，请登录！");
+                toggleForm('loginForm');
+            } else {
+                alert(result.message || "注册失败");
+            }
+        }
+
+        function toggleForm(formId) {
+            if (formId === 'loginForm') {
+                document.getElementById("loginForm").style.display = "block";
+                document.getElementById("registerForm").style.display = "none";
+            } else {
+                document.getElementById("loginForm").style.display = "none";
+                document.getElementById("registerForm").style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
+

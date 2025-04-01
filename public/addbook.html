@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加书籍</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #57cf5b;  /* 背景颜色改为绿色 */
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .add-book-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #ffffff;
+            color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .add-book-btn:hover {
+            background-color: #45a049;
+        }
+
+        .form-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-content {
+            background-color: white;
+            padding: 100px;
+            border-radius: 5px;
+            width: 300px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-content input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-content button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-content button:hover {
+            background-color: #45a049;
+        }
+
+        .close-btn {
+            background-color: red;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .close-btn:hover {
+            background-color: darkred;
+        }
+
+        .book-list {
+            margin-top: 40px;
+        }
+
+        .book-item {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .book-item small {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h1>请添加你想录入的书</h1>
+    <div class="container">
+        <button class="add-book-btn" onclick="showForm()">添加书籍</button>
+        <!-- 表单容器 -->
+        <div class="form-container" id="formContainer">
+            <div class="form-content">
+                <h2>添加新书籍</h2>
+                <form id="bookForm" enctype="multipart/form-data">
+                    <input type="text" id="bookTitle" placeholder="书名" required><br>
+                    <input type="text" id="bookAuthor" placeholder="作者" required><br>
+                    <input type="text" id="bookISBN" placeholder="ISBN" required><br>
+                    <input type="text" id="bookOwner" placeholder="你的姓名" required><br>
+                    <!-- 图片上传 -->
+                    <input type="file" id="bookImage" accept="image/*"><br>
+                    <button type="submit">提交</button>
+                </form>
+                <button class="close-btn" onclick="closeForm()">关闭</button>
+            </div>
+        </div>
+
+        <!-- 显示书籍列表 -->
+        <div class="book-list" id="bookList"></div>
+    </div>
+
+    <script>
+        // 显示表单
+        function showForm() {
+            document.getElementById('formContainer').style.display = 'flex';
+        }
+
+        // 关闭表单
+        function closeForm() {
+            document.getElementById('formContainer').style.display = 'none';
+        }
+
+        // 提交表单
+        document.getElementById('bookForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // 防止页面刷新
+
+            const bookTitle = document.getElementById('bookTitle').value;
+            const bookAuthor = document.getElementById('bookAuthor').value;
+            const bookISBN = document.getElementById('bookISBN').value;
+            const bookOwner = document.getElementById('bookOwner').value;
+            const bookImage = document.getElementById('bookImage').files[0];
+
+            const formData = new FormData();
+            formData.append('title', bookTitle);
+            formData.append('author', bookAuthor);
+            formData.append('isbn', bookISBN);
+            formData.append('owner', bookOwner);
+            if (bookImage) formData.append('image', bookImage);
+
+            // 发送数据到后端
+            fetch('http://localhost:3000/api/books', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(() => {
+                displayBooks(); // 刷新书籍列表
+                closeForm();    // 关闭表单
+                clearForm();    // 清空表单
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // 更新书籍列表
+        function displayBooks() {
+            fetch('http://localhost:3000/api/books')
+            .then(response => response.json())
+            .then(data => {
+                const bookListContainer = document.getElementById('bookList');
+                bookListContainer.innerHTML = ''; // 清空列表
+
+                data.forEach((book) => {
+                    const bookItem = document.createElement('div');
+                    bookItem.classList.add('book-item');
+                    bookItem.innerHTML = `
+                        <strong>${book.title}</strong><br>
+                        作者: ${book.author}<br>
+                        ISBN: ${book.isbn}<br>
+                        所有者: ${book.owner}<br>
+                        ${book.image ? `<img src="${book.image}" alt="Book Image" style="width:100px; height:auto;">` : ''}
+                    `;
+                    bookListContainer.appendChild(bookItem);
+                });
+            })
+            .catch(error => console.error('Error fetching books:', error));
+        }
+
+        // 清空表单
+        function clearForm() {
+            document.getElementById('bookTitle').value = '';
+            document.getElementById('bookAuthor').value = '';
+            document.getElementById('bookISBN').value = '';
+            document.getElementById('bookOwner').value = '';
+            document.getElementById('bookImage').value = '';  // 清除图片选择
+        }
+
+        // 页面加载时，获取并显示所有书籍
+        window.onload = function () {
+            displayBooks();
+        };
+    </script>
+</body>
+</html>
